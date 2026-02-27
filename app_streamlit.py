@@ -141,45 +141,80 @@ def mix_audio(tts_file, bgm_file, output_file, db_reduce):
     # Nếu ko có nhạc hoặc lỗi (copy thẳng tts file sang)
     shutil.copy2(tts_file, output_file)
 
+# ================= GIAO DIỆN BẢNG THEO DÕI =================
+if "app_state" not in st.session_state:
+    st.session_state.app_state = {
+        "waiting": [],
+        "ok": [],
+        "fail": []
+    }
+
+st.markdown("---")
+c1, c2, c3 = st.columns(3)
+with c1:
+    title_run = st.empty()
+    area_run = st.empty()
+with c2:
+    title_ok = st.empty()
+    area_ok = st.empty()
+with c3:
+    title_fail = st.empty()
+    area_fail = st.empty()
+
+progress_text = st.empty()
+progress_bar = st.progress(0)
+status_text = st.empty()
+
+if "popup_visible" not in st.session_state:
+    st.session_state.popup_visible = True
+
+# === SIDEBAR TRACKER ===
+with st.sidebar:
+    st.markdown("## 📊 Theo Dõi Tiến Độ")
+    sidebar_status = st.empty()           # text trạng thái hiện tại
+    sidebar_bar = st.progress(0)          # thanh tiến độ
+    sidebar_pct = st.empty()              # % to
+    sidebar_detail = st.empty()           # chi tiết bài
+    sidebar_ok_count = st.empty()         # số thành công
+    sidebar_fail_count = st.empty()       # số thất bại
+    st.markdown("---")
+    sidebar_status.info("🗣️ Chưa chạy - Nhấn nút bên phải!")
+
+def refresh_tables():
+    lw = st.session_state.app_state["waiting"]
+    lok = st.session_state.app_state["ok"]
+    lfail = st.session_state.app_state["fail"]
+    
+    title_run.markdown(f"🏃 **ĐANG CHẠY ({len(lw)})**")
+    title_ok.markdown(f"✅ **THÀNH CÔNG ({len(lok)})**")
+    title_fail.markdown(f"❌ **THẤT BẠI ({len(lfail)})**")
+    
+    col_cfg = {
+        "URL": st.column_config.LinkColumn("Đường Dẫn URL Gốc"),
+        "URL CMS": st.column_config.LinkColumn("Link Đi Đích CMS")
+    }
+    area_run.dataframe(lw, use_container_width=True, hide_index=True, column_config=col_cfg)
+    area_ok.dataframe(lok if lok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
+    area_fail.dataframe(lfail if lfail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
+
+refresh_tables()
+
 async def process_urls(urls_list):
     valid_urls = [u.strip() for u in urls_list if u.strip()]
     if not valid_urls:
         st.warning("Danh sách link rỗng!")
         return
         
-    progress_text = st.empty()
-    progress_bar = st.progress(0)
-    status_text = st.empty()
-    
-    list_waiting = [{"URL": u, "Trạng thái": "⏳ Đang chờ"} for u in valid_urls]
-    list_ok = []
-    list_fail = []
+    sidebar_status.info("♥️ Đang khởi động...")
+    sidebar_pct.markdown("")
+    sidebar_detail.markdown("")
+    sidebar_ok_count.markdown("")
+    sidebar_fail_count.markdown("")
+    sidebar_bar.progress(0)
 
-    st.markdown("---")
-    c1, c2, c3 = st.columns(3)
-    with c1:
-        title_run = st.empty()
-        area_run = st.empty()
-    with c2:
-        title_ok = st.empty()
-        area_ok = st.empty()
-    with c3:
-        title_fail = st.empty()
-        area_fail = st.empty()
-        
-    def refresh_tables():
-        title_run.markdown(f"🏃 **ĐANG CHẠY / CHỜ ({len(list_waiting)})**")
-        title_ok.markdown(f"✅ **THÀNH CÔNG ({len(list_ok)})**")
-        title_fail.markdown(f"❌ **THẤT BẠI ({len(list_fail)})**")
-        
-        col_cfg = {
-            "URL": st.column_config.LinkColumn("Đường Dẫn URL Gốc"),
-            "URL CMS": st.column_config.LinkColumn("Link Đi Đích CMS")
-        }
-        area_run.dataframe(list_waiting, use_container_width=True, hide_index=True, column_config=col_cfg)
-        area_ok.dataframe(list_ok if list_ok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
-        area_fail.dataframe(list_fail if list_fail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
-        
+    st.session_state.app_state["waiting"] = [{"URL": u, "Trạng thái": "⏳ Đang chờ"} for u in valid_urls]
+    st.session_state.app_state["ok"] = []
+    st.session_state.app_state["fail"] = []
     refresh_tables()
     
     os.makedirs("tmp_audios", exist_ok=True)
@@ -194,14 +229,18 @@ async def process_urls(urls_list):
     }
     
     for idx, url in enumerate(valid_urls):
-        if len(list_waiting) > 0:
-            list_waiting[0]["Trạng thái"] = "▶️ Đang xử lý..."
+        lw = st.session_state.app_state["waiting"]
+        lok = st.session_state.app_state["ok"]
+        lfail = st.session_state.app_state["fail"]
+        
+        if len(lw) > 0:
+            lw[0]["Trạng thái"] = "▶️ Đang xử lý..."
             refresh_tables()
             
         match = re.search(r'([a-f0-9]{24})', url)
         if not match:
-            if list_waiting: list_waiting.pop(0)
-            list_fail.insert(0, {"URL": url, "Lỗi": "Sai format URL CMS"})
+            if lw: lw.pop(0)
+            lfail.insert(0, {"URL": url, "Lỗi": "Sai format URL CMS"})
             refresh_tables()
             continue
             
@@ -213,13 +252,13 @@ async def process_urls(urls_list):
         try:
             get_resp = requests.get(api_url, headers=headers)
         except Exception as e:
-            if list_waiting: list_waiting.pop(0)
-            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"Lệnh Fetch đứt: {e}"})
+            if lw: lw.pop(0)
+            lfail.insert(0, {"URL": dest_id, "Lỗi": f"Lệnh Fetch đứt: {e}"})
             refresh_tables(); continue
             
         if get_resp.status_code in [401, 403]:
-            if list_waiting: list_waiting.pop(0)
-            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"BỊ CHẶN: TOKEN ĐẾT HẠN!"})
+            if lw: lw.pop(0)
+            lfail.insert(0, {"URL": dest_id, "Lỗi": f"BỊ CHẶN: TOKEN ĐẾT HẠN!"})
             refresh_tables()
             st.error("🚨 TOKEN ĐÃ HẾT HẠN - SYSTEM PAUSED 🚨")
             break
@@ -273,8 +312,8 @@ async def process_urls(urls_list):
                 filename_en = results[0]
                 
         except Exception as e:
-            if list_waiting: list_waiting.pop(0)
-            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"Lỗi tạo TTS: {e}"})
+            if lw: lw.pop(0)
+            lfail.insert(0, {"URL": dest_id, "Lỗi": f"Lỗi tạo TTS: {e}"})
             refresh_tables()
             continue
                 
@@ -289,22 +328,40 @@ async def process_urls(urls_list):
             
         if filename_vi or filename_en:
             patch_resp = requests.patch(api_url, headers=headers, json=payload)
-            if list_waiting: list_waiting.pop(0)
+            if lw: lw.pop(0)
             if patch_resp.status_code == 200:
-                list_ok.insert(0, {"Tên Bài": t_vi, "URL CMS": url})
+                lok.insert(0, {"Tên Bài": t_vi, "URL CMS": url})
             else:
-                list_fail.insert(0, {"URL": dest_id, "Lỗi": f"PATCH THẤT BẠI: {patch_resp.text}"})
+                lfail.insert(0, {"URL": dest_id, "Lỗi": f"PATCH THẤT BẠI: {patch_resp.text}"})
         else:
-            if list_waiting: list_waiting.pop(0)
-            list_fail.insert(0, {"URL": dest_id, "Lỗi": "Không thể up Audio"})
+            if lw: lw.pop(0)
+            lfail.insert(0, {"URL": dest_id, "Lỗi": "Không thể up Audio"})
             
         refresh_tables()
         curr_percent = int(((idx + 1) / len(valid_urls)) * 100)
-        progress_text.markdown(f"**🎯 Tiến độ xử lý: {curr_percent}%** ({idx+1}/{len(valid_urls)} Bài viết)")
+        lok = st.session_state.app_state["ok"]
+        lfail = st.session_state.app_state["fail"]
+        lw2 = st.session_state.app_state["waiting"]
+        
+        # Cập nhật Sidebar Tracker
+        sidebar_bar.progress((idx + 1) / len(valid_urls))
+        sidebar_pct.markdown(f"<h1 style='color:#ff4b4b; margin:0; font-size:64px;'>{curr_percent}<span style='font-size:28px;'>%</span></h1>", unsafe_allow_html=True)
+        sidebar_detail.markdown(f"📌 **Bài {idx+1}** / {len(valid_urls)} đang xử lý")
+        sidebar_ok_count.markdown(f"✅ **{len(lok)}** thành công | ❌ **{len(lfail)}** lỗi | ⏳ {len(lw2)} chờ")
+        sidebar_status.info(f"⏳ Đang xử lý bài {idx+1}...")
+        
         progress_bar.progress((idx + 1) / len(valid_urls))
-        await asyncio.sleep(0.2) # Chống spam - thay cho time.sleep(1)
+        await asyncio.sleep(0.2)
 
     status_text.text("🎉 HOÀN TẤT TOÀN BỘ QUÁ TRÌNH!")
+    lok_final = st.session_state.app_state["ok"]
+    lfail_final = st.session_state.app_state["fail"]
+    sidebar_bar.progress(1.0)
+    sidebar_pct.markdown("<h1 style='color:#00c853; margin:0; font-size:64px;'>100<span style='font-size:28px;'>%</span></h1>", unsafe_allow_html=True)
+    sidebar_detail.markdown(f"🎉 **Hoàn Tất!** {len(valid_urls)} bài viết")
+    sidebar_ok_count.markdown(f"✅ **{len(lok_final)}** thành công | ❌ **{len(lfail_final)}** thất bại")
+    sidebar_status.success("🎉 Cày DATA XONG!")
+    progress_text.markdown("")
 
 if st.button("🚀 BẮT ĐẦU XỬ LÝ (RUN THE BATCH)", type="primary"):
     urls_list = urls_text.strip().split("\n")
@@ -317,4 +374,5 @@ if st.button("🚀 BẮT ĐẦU XỬ LÝ (RUN THE BATCH)", type="primary"):
     elif not run_vi and not run_en:
         st.error("🚨 Phải tick chọn ít nhất 1 ngôn ngữ chạy chứ sếp!")
     else:
+        st.session_state.popup_visible = True
         asyncio.run(process_urls(urls_list))
