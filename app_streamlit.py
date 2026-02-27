@@ -4,7 +4,8 @@ import os
 import re
 import requests
 from bs4 import BeautifulSoup
-from pydub import AudioSegment
+import subprocess
+import shutil
 import edge_tts
 import time
 
@@ -103,23 +104,24 @@ def upload_audio_to_storage(file_path, tok):
     return None
 
 def mix_audio(tts_file, bgm_file, output_file, db_reduce):
-    tts_audio = AudioSegment.from_file(tts_file)
     if bgm_file and os.path.exists(bgm_file):
         try:
-            bgm_audio = AudioSegment.from_file(bgm_file)
-            dur_tts = len(tts_audio)
-            dur_bgm = len(bgm_audio)
-            if dur_bgm < dur_tts:
-                bgm_audio = bgm_audio * ((dur_tts // dur_bgm) + 1)
-            bgm_audio = bgm_audio - abs(db_reduce)
-            bgm_audio = bgm_audio[:dur_tts]
-            mixed = bgm_audio.overlay(tts_audio)
-            mixed.export(output_file, format="mp3", bitrate="128k", parameters=["-write_xing", "0"])
+            # Dùng trực tiếp FFmpeg bằng subprocess thay cho pydub (Mạnh hơn, tránh lỗi audioop)
+            cmd = [
+                "ffmpeg", "-y",
+                "-i", tts_file,
+                "-stream_loop", "-1", "-i", bgm_file,
+                "-filter_complex", f"[1:a]volume={-abs(db_reduce)}dB[bgm];[0:a][bgm]amix=inputs=2:duration=first:dropout_transition=2",
+                "-c:a", "libmp3lame",
+                "-b:a", "128k",
+                output_file
+            ]
+            subprocess.run(cmd, check=True, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
             return
         except Exception:
             pass
-    # Nếu ko có nhạc hoặc lỗi
-    tts_audio.export(output_file, format="mp3", bitrate="128k", parameters=["-write_xing", "0"])
+    # Nếu ko có nhạc hoặc lỗi (copy thẳng tts file sang)
+    shutil.copy2(tts_file, output_file)
 
 async def process_urls(urls_list):
     valid_urls = [u.strip() for u in urls_list if u.strip()]
