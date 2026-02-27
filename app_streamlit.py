@@ -173,8 +173,8 @@ async def process_urls(urls_list):
         title_fail.markdown(f"❌ **THẤT BẠI ({len(list_fail)})**")
         
         col_cfg = {
-            "URL": st.column_config.LinkColumn("Đường Dẫn (Click Mở)", display_text="🔗 Xem link"),
-            "URL CMS": st.column_config.LinkColumn("Link Đi Đích (Click Mở)", display_text="🔗 Tới CMS")
+            "URL": st.column_config.LinkColumn("Đường Dẫn URL Gốc"),
+            "URL CMS": st.column_config.LinkColumn("Link Đi Đích CMS")
         }
         area_run.dataframe(list_waiting, use_container_width=True, hide_index=True, column_config=col_cfg)
         area_ok.dataframe(list_ok if list_ok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
