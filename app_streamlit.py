@@ -15,7 +15,20 @@ st.markdown("Xây dựng bởi Antigravity Agent. Dán danh sách URL là có Fu
 
 # ================= KHOẢNG XÁC THỰC =================
 st.subheader("🔑 1. Xác thực (Bearer Token)")
-token = st.text_input("Dán chuỗi Token (bắt đầu bằng eyJ) vào đây:", type="password")
+
+TOKEN_FILE = "saved_token.txt"
+if os.path.exists(TOKEN_FILE):
+    with open(TOKEN_FILE, "r") as f:
+        default_token = f.read().strip()
+else:
+    default_token = ""
+
+token = st.text_input("Dán chuỗi Token (bắt đầu bằng eyJ) vào đây:", value=default_token, type="password")
+
+if token and token != default_token and len(token) > 50:
+    with open(TOKEN_FILE, "w") as f:
+        f.write(token.strip())
+    st.success("✅ Đã tự động Trữ đông Token dùng chung cho toàn bộ Team rồi nha Sếp!")
 
 with st.expander("Cách lấy Token (F12)"):
     st.markdown("""
@@ -109,10 +122,45 @@ def mix_audio(tts_file, bgm_file, output_file, db_reduce):
     tts_audio.export(output_file, format="mp3", bitrate="128k", parameters=["-write_xing", "0"])
 
 async def process_urls(urls_list):
+    valid_urls = [u.strip() for u in urls_list if u.strip()]
+    if not valid_urls:
+        st.warning("Danh sách link rỗng!")
+        return
+        
+    progress_text = st.empty()
     progress_bar = st.progress(0)
     status_text = st.empty()
-    log_area = st.empty()
-    logs = []
+    
+    list_waiting = [{"URL": u, "Trạng thái": "⏳ Đang chờ"} for u in valid_urls]
+    list_ok = []
+    list_fail = []
+
+    st.markdown("---")
+    c1, c2, c3 = st.columns(3)
+    with c1:
+        title_run = st.empty()
+        area_run = st.empty()
+    with c2:
+        title_ok = st.empty()
+        area_ok = st.empty()
+    with c3:
+        title_fail = st.empty()
+        area_fail = st.empty()
+        
+    def refresh_tables():
+        title_run.markdown(f"🏃 **ĐANG CHẠY / CHỜ ({len(list_waiting)})**")
+        title_ok.markdown(f"✅ **THÀNH CÔNG ({len(list_ok)})**")
+        title_fail.markdown(f"❌ **THẤT BẠI ({len(list_fail)})**")
+        
+        col_cfg = {
+            "URL": st.column_config.LinkColumn("Đường Dẫn (Click Mở)", display_text="🔗 Xem link"),
+            "URL CMS": st.column_config.LinkColumn("Link Đi Đích (Click Mở)", display_text="🔗 Tới CMS")
+        }
+        area_run.dataframe(list_waiting, use_container_width=True, hide_index=True, column_config=col_cfg)
+        area_ok.dataframe(list_ok if list_ok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
+        area_fail.dataframe(list_fail if list_fail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
+        
+    refresh_tables()
     
     os.makedirs("tmp_audios", exist_ok=True)
     clean_token = token.strip().strip('"').strip("'")
@@ -125,32 +173,34 @@ async def process_urls(urls_list):
         'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36'
     }
     
-    for idx, url in enumerate(urls_list):
-        url = url.strip()
-        if not url: continue
-        
+    for idx, url in enumerate(valid_urls):
+        if len(list_waiting) > 0:
+            list_waiting[0]["Trạng thái"] = "▶️ Đang xử lý..."
+            refresh_tables()
+            
         match = re.search(r'([a-f0-9]{24})', url)
         if not match:
-            logs.insert(0, f"❌ [{idx+1}/{len(urls_list)}] Bỏ qua URL rác: {url}")
-            log_area.code("\n".join(logs))
+            if list_waiting: list_waiting.pop(0)
+            list_fail.insert(0, {"URL": url, "Lỗi": "Sai format URL CMS"})
+            refresh_tables()
             continue
             
         dest_id = match.group(1)
         api_url = f'https://api.tatinta.com/v1/destination/destination/{dest_id}'
         
         status_text.text(f"⏳ Đang xử lý: {dest_id} (Fetch Data)...")
-        logs.insert(0, f"🔄 [{idx+1}/{len(urls_list)}] Bắt đầu kết nối ID: {dest_id}")
-        log_area.code("\n".join(logs))
         
         try:
             get_resp = requests.get(api_url, headers=headers)
         except Exception as e:
-            logs[0] = f"❌ [{idx+1}/{len(urls_list)}] Lỗi Fetch ID {dest_id}: {e}"
-            log_area.code("\n".join(logs)); continue
+            if list_waiting: list_waiting.pop(0)
+            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"Lệnh Fetch đứt: {e}"})
+            refresh_tables(); continue
             
         if get_resp.status_code in [401, 403]:
-            logs[0] = f"🚨 [{idx+1}/{len(urls_list)}] BỊ CHẶN (Mã {get_resp.status_code}): TOKEN ĐÃ HẾT HẠN"
-            log_area.code("\n".join(logs))
+            if list_waiting: list_waiting.pop(0)
+            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"BỊ CHẶN: TOKEN ĐẾT HẠN!"})
+            refresh_tables()
             st.error("🚨 TOKEN ĐÃ HẾT HẠN - SYSTEM PAUSED 🚨")
             break
             
@@ -161,9 +211,6 @@ async def process_urls(urls_list):
         translations_dict = data.get('translations', {})
         t_en = translations_dict.get('en', {}).get('name', t_vi)
         c_en = translations_dict.get('en', {}).get('content', '')
-        
-        logs[0] = f"🔄 [{idx+1}/{len(urls_list)}] Đang Xử Lý: {t_vi} ({dest_id})"
-        log_area.code("\n".join(logs))
         
         filename_vi = None
         filename_en = None
@@ -206,8 +253,9 @@ async def process_urls(urls_list):
                 filename_en = results[0]
                 
         except Exception as e:
-            logs.insert(0, f"❌ [{idx+1}/{len(urls_list)}] Lỗi khi tạo MP3/Upload: {e}")
-            log_area.code("\n".join(logs))
+            if list_waiting: list_waiting.pop(0)
+            list_fail.insert(0, {"URL": dest_id, "Lỗi": f"Lỗi tạo TTS: {e}"})
+            refresh_tables()
             continue
                 
         # PATCH LÊN CMS
@@ -221,13 +269,19 @@ async def process_urls(urls_list):
             
         if filename_vi or filename_en:
             patch_resp = requests.patch(api_url, headers=headers, json=payload)
+            if list_waiting: list_waiting.pop(0)
             if patch_resp.status_code == 200:
-                logs.insert(0, f"✅ [{idx+1}/{len(urls_list)}] THÀNH CÔNG: {t_vi} / {t_en}")
+                list_ok.insert(0, {"Tên Bài": t_vi, "URL CMS": url})
             else:
-                logs.insert(0, f"⚠️ [{idx+1}/{len(urls_list)}] PATCH LỖI: {patch_resp.text}")
-        
-        log_area.code("\n".join(logs))
-        progress_bar.progress((idx + 1) / len(urls_list))
+                list_fail.insert(0, {"URL": dest_id, "Lỗi": f"PATCH THẤT BẠI: {patch_resp.text}"})
+        else:
+            if list_waiting: list_waiting.pop(0)
+            list_fail.insert(0, {"URL": dest_id, "Lỗi": "Không thể up Audio"})
+            
+        refresh_tables()
+        curr_percent = int(((idx + 1) / len(valid_urls)) * 100)
+        progress_text.markdown(f"**🎯 Tiến độ xử lý: {curr_percent}%** ({idx+1}/{len(valid_urls)} Bài viết)")
+        progress_bar.progress((idx + 1) / len(valid_urls))
         await asyncio.sleep(0.2) # Chống spam - thay cho time.sleep(1)
 
     status_text.text("🎉 HOÀN TẤT TOÀN BỘ QUÁ TRÌNH!")
