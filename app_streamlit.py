@@ -35,7 +35,7 @@ col1, col2 = st.columns(2)
 with col1:
     run_vi = st.checkbox("✅ Tạo Tiếng Việt", value=True)
     voice_vi = st.selectbox("Giọng Tiếng Việt", ["vi-VN-NamMinhNeural", "vi-VN-HoaiMyNeural"])
-    rate_vi = st.slider("Tốc độ VI (%)", -50, 50, -5)
+    rate_vi = st.slider("Tốc độ VI (%)", -50, 50, 5)
     pitch_vi = st.slider("Độ trầm (Hz)", -20, 20, -5)
 
 with col2:
@@ -75,6 +75,7 @@ def fix_text_for_tts(title, raw_html):
 def upload_audio_to_storage(file_path, tok):
     url = 'https://api.tatinta.com/v1/extra/upload/audio'
     tok_clean = tok.strip().strip('"').strip("'")
+    tok_clean = tok_clean.encode('ascii', 'ignore').decode('ascii') # Ép sạch ký tự ẩn unicode
     headers = {
         'Origin': 'https://cms.tatinta.com', 
         'Referer': 'https://cms.tatinta.com/',
@@ -115,6 +116,7 @@ async def process_urls(urls_list):
     
     os.makedirs("tmp_audios", exist_ok=True)
     clean_token = token.strip().strip('"').strip("'")
+    clean_token = clean_token.encode('ascii', 'ignore').decode('ascii') # Cạo sạch ký tự tàng hình
     headers = {
         'Origin': 'https://cms.tatinta.com', 
         'Referer': 'https://cms.tatinta.com/',
@@ -166,48 +168,45 @@ async def process_urls(urls_list):
         filename_vi = None
         filename_en = None
         
+        async def process_lang_task(lang_code, title, content, voice, rate, pitch):
+            text_tts = fix_text_for_tts(title, content)
+            if not text_tts: 
+                text_tts = f"{title}...\n\nInformation about this destination will be updated soon." if lang_code == "en" else f"{title}... Chưa có nội dung."
+            
+            raw_f = f"tmp_audios/{dest_id}_raw_{lang_code}.mp3"
+            mix_f = f"tmp_audios/{dest_id}_mix_{lang_code}.mp3"
+            
+            status_text.text(f"Đang sinh EdgeTTS {lang_code.upper()} cho: {title}...")
+            await edge_tts.Communicate(text_tts, voice, rate=f"{rate:+d}%", pitch=f"{pitch:+d}Hz").save(raw_f)
+            
+            status_text.text(f"Mix nhạc {lang_code.upper()}...")
+            await asyncio.to_thread(mix_audio, raw_f, bgm_path if use_bgm else None, mix_f, bgm_volume_db)
+            
+            status_text.text(f"Upload kho lưu trữ {lang_code.upper()}...")
+            fname = await asyncio.to_thread(upload_audio_to_storage, mix_f, clean_token)
+            
+            if os.path.exists(raw_f): os.remove(raw_f)
+            if os.path.exists(mix_f): os.remove(mix_f)
+            return fname
+
         try:
-            # TIẾNG VIỆT
+            tasks = []
             if run_vi:
-                text_vi = fix_text_for_tts(t_vi, c_vi)
-                if not text_vi: text_vi = f"{t_vi}... Chưa có nội dung."
-                status_text.text(f"Đang sinh EdgeTTS Tiếng Việt cho: {t_vi}...")
-                
-                raw_vi = f"tmp_audios/{dest_id}_raw_vi.mp3"
-                mix_vi = f"tmp_audios/{dest_id}_mix_vi.mp3"
-                rate_vi_str = f"{rate_vi:+d}%"
-                pitch_vi_str = f"{pitch_vi:+d}Hz"
-                await edge_tts.Communicate(text_vi, voice_vi, rate=rate_vi_str, pitch=pitch_vi_str).save(raw_vi)
-                
-                status_text.text(f"Mix nhạc Tiếng Việt...")
-                mix_audio(raw_vi, bgm_path if use_bgm else None, mix_vi, bgm_volume_db)
-                
-                status_text.text(f"Upload kho lưu trữ Tiếng Việt...")
-                filename_vi = upload_audio_to_storage(mix_vi, clean_token)
-                if os.path.exists(raw_vi): os.remove(raw_vi)
-                if os.path.exists(mix_vi): os.remove(mix_vi)
-                    
-            # TIẾNG ANH
+                tasks.append(process_lang_task("vi", t_vi, c_vi, voice_vi, rate_vi, pitch_vi))
             if run_en:
-                text_en = fix_text_for_tts(t_en, c_en)
-                if not c_en: text_en = f"{t_en}...\n\nInformation about this destination will be updated soon."
-                status_text.text(f"Đang sinh EdgeTTS Tiếng Anh cho: {t_en}...")
+                tasks.append(process_lang_task("en", t_en, c_en, voice_en, rate_en, pitch_en))
                 
-                raw_en = f"tmp_audios/{dest_id}_raw_en.mp3"
-                mix_en = f"tmp_audios/{dest_id}_mix_en.mp3"
-                rate_en_str = f"{rate_en:+d}%"
-                pitch_en_str = f"{pitch_en:+d}Hz"
-                await edge_tts.Communicate(text_en, voice_en, rate=rate_en_str, pitch=pitch_en_str).save(raw_en)
+            results = await asyncio.gather(*tasks)
+            
+            if run_vi and run_en:
+                filename_vi, filename_en = results
+            elif run_vi:
+                filename_vi = results[0]
+            elif run_en:
+                filename_en = results[0]
                 
-                status_text.text(f"Mix nhạc Tiếng Anh...")
-                mix_audio(raw_en, bgm_path if use_bgm else None, mix_en, bgm_volume_db)
-                
-                status_text.text(f"Upload kho lưu trữ Tiếng Anh...")
-                filename_en = upload_audio_to_storage(mix_en, clean_token)
-                if os.path.exists(raw_en): os.remove(raw_en)
-                if os.path.exists(mix_en): os.remove(mix_en)
         except Exception as e:
-            logs.insert(0, f"❌ [{idx+1}/{len(urls_list)}] Lỗi khi tạo MP3: {e}")
+            logs.insert(0, f"❌ [{idx+1}/{len(urls_list)}] Lỗi khi tạo MP3/Upload: {e}")
             log_area.code("\n".join(logs))
             continue
                 
@@ -229,7 +228,7 @@ async def process_urls(urls_list):
         
         log_area.code("\n".join(logs))
         progress_bar.progress((idx + 1) / len(urls_list))
-        time.sleep(1) # Chống spam
+        await asyncio.sleep(0.2) # Chống spam - thay cho time.sleep(1)
 
     status_text.text("🎉 HOÀN TẤT TOÀN BỘ QUÁ TRÌNH!")
 
