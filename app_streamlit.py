@@ -11,23 +11,6 @@ import time
 
 st.set_page_config(page_title="Tatinta Audio Automator", page_icon="🎙️", layout="wide")
 
-# ================= KHOÁ BẢO MẬT (LOGIN) =================
-if "authenticated" not in st.session_state:
-    st.session_state.authenticated = False
-
-if not st.session_state.authenticated:
-    col1, col2, col3 = st.columns([1, 2, 1])
-    with col2:
-        st.markdown("<h2 style='text-align: center;'>🔒 CỔNG BẢO MẬT TATINTA</h2>", unsafe_allow_html=True)
-        pwd_input = st.text_input("🔐 Nhập Mật khẩu Truy Cập Hệ Thống:", type="password")
-        if st.button("🚀 Đăng Nhập", use_container_width=True):
-            if pwd_input == "Tatintavietnam1#":
-                st.session_state.authenticated = True
-                st.rerun()
-            elif pwd_input:
-                st.error("❌ Mật khẩu không chính xác! Vui lòng kiểm tra lại.")
-    st.stop() # Chặn đứng mọi thứ ở dưới nếu chưa nhập đúng Pass
-
 # ================= GIAO DIỆN CHÍNH =================
 st.title("🎙️ Hệ Thống Tự Động Thu Âm & Ghép Nhạc Tatinta CMS")
 st.markdown("Xây dựng bởi Antigravity Agent. Dán danh sách URL là có Full Audio 2 Ngôn Ngữ.")
