@@ -51,7 +51,7 @@ with col1:
     run_vi = st.checkbox("✅ Tạo Tiếng Việt", value=True)
     voice_vi = st.selectbox("Giọng Tiếng Việt", ["vi-VN-NamMinhNeural", "vi-VN-HoaiMyNeural"])
     rate_vi = st.slider("Tốc độ VI (%)", -50, 50, 5)
-    pitch_vi = st.slider("Độ trầm (Hz)", -20, 20, -5)
+    pitch_vi = st.slider("Độ trầm (Hz)", -20, 20, -10)
 
 with col2:
     run_en = st.checkbox("✅ Tạo Tiếng Anh", value=True)
@@ -84,7 +84,6 @@ urls_text = st.text_area("Mỗi dòng 1 URL:", height=200, placeholder="https://
 def fix_text_for_tts(title, raw_html):
     if not title and not raw_html: return ""
     clean_content = BeautifulSoup(raw_html, "html.parser").get_text(separator="\n").strip()
-    clean_content = re.sub(r'([,\.])(?!\d)', r'\1...', clean_content)
     return f"{title}...\n\n{clean_content}"
 
 def upload_audio_to_storage(file_path, tok):
