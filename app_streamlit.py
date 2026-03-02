@@ -301,13 +301,14 @@ def show_history_sidebar():
     st.markdown("## 📋 Lịch Sử Đã Xử Lý")
     _h = load_history()
     if _h:
-        st.markdown(f"**Tổng: {len(_h)} URL** — Copy vào Google Sheet 👇")
-        url_lines = "\n".join(
-            f"https://cms.tatinta.com/destination/action/{did}"
-            for did in _h.keys()
-        )
-        st.code(url_lines, language=None)
-        with st.expander("📖 Xem chi tiết"):
+        st.markdown(f"✅ **{len(_h)} URL** đã có audio")
+        with st.expander("📖 Xem danh sách & copy"):
+            url_lines = "\n".join(
+                f"https://cms.tatinta.com/destination/action/{did}"
+                for did in _h.keys()
+            )
+            st.code(url_lines, language=None)
+            st.markdown("---")
             for did, info in list(_h.items())[:50]:
                 st.markdown(
                     f"• **{info.get('title','?')}**  \n"
