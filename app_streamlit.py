@@ -296,28 +296,28 @@ with st.sidebar:
     
     st.markdown("---")
     
-@st.fragment(run_every=30)
-def show_history_sidebar():
+    # === LỊCH SỬ ===
     st.markdown("## 📋 Lịch Sử Đã Xử Lý")
     _h = load_history()
     if _h:
         st.markdown(f"✅ **{len(_h)} URL** đã có audio")
-        with st.expander("📖 Xem danh sách & copy"):
+        # Preview 5 URL đầu
+        preview = list(_h.keys())[:5]
+        for did in preview:
+            short = did[-8:]
+            title = _h[did].get('title','?')[:20]
+            st.caption(f"• {title}... `{short}`")
+        if len(_h) > 5:
+            st.caption(f"_...và {len(_h)-5} URL khác_")
+        # Expander full list + copy
+        with st.expander("📋 Xem tất cả & copy"):
             url_lines = "\n".join(
                 f"https://cms.tatinta.com/destination/action/{did}"
                 for did in _h.keys()
             )
             st.code(url_lines, language=None)
-            st.markdown("---")
-            for did, info in list(_h.items())[:50]:
-                st.markdown(
-                    f"• **{info.get('title','?')}**  \n"
-                    f"  `{info.get('ran_at','?')}`"
-                )
     else:
-        st.info("Chưa có lịch sử nào. Chạy batch đầu tiên đi Sếp!")
-
-show_history_sidebar()
+        st.info("Chưa có lịch sử nào!")
 
 def refresh_tables():
     lw = st.session_state.app_state["waiting"]
