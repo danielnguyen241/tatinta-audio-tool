@@ -427,9 +427,9 @@
   },
   "65825fa52a164e5e6fe9088a": {
     "title": "Đại lộ Santa Monica",
-    "ran_at": "2026-03-02 04:06:16",
-    "audio_vi": "audio/2026/03/02/faudio-1772424370541.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772424358280.mp3"
+    "ran_at": "2026-03-02 04:25:56",
+    "audio_vi": "audio/2026/03/02/faudio-1772425549740.mp3",
+    "audio_en": "audio/2026/03/02/faudio-1772425549964.mp3"
   },
   "612c9ced6e8b5a656411cee8": {
     "title": "S.Blue Restaurant & Bar",
@@ -874,11 +874,5 @@
     "ran_at": "2026-03-02 04:25:03",
     "audio_vi": "audio/2026/03/02/faudio-1772425498614.mp3",
     "audio_en": "audio/2026/03/02/faudio-1772425451608.mp3"
-  },
-  "6981bcbdd72a6478c114eff1": {
-    "title": "Bảo tàng Bà Rịa - Vũng Tàu",
-    "ran_at": "2026-03-02 04:25:55",
-    "audio_vi": "audio/2026/03/02/faudio-1772425549637.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772425527108.mp3"
   }
 }
