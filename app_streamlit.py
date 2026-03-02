@@ -89,16 +89,19 @@ st.set_page_config(page_title="Tatinta Audio Automator", page_icon="🎙️", la
 # ================= GIAO DIỆN CHÍNH =================
 st.title("🎙️ Hệ Thống Tự Động Thu Âm & Ghép Nhạc Tatinta CMS")
 
-# --- THỐNG KÊ TỔNG ---
-_hist = load_history() if os.path.exists("processed_urls.json") else {}
-_total = len(_hist)
-_has_vi = sum(1 for v in _hist.values() if v.get("audio_vi"))
-_has_en = sum(1 for v in _hist.values() if v.get("audio_en"))
-col_s1, col_s2, col_s3, col_s4 = st.columns(4)
-col_s1.metric("🎙️ Tổng URL đã có Audio", _total)
-col_s2.metric("🇻🇳 Có Audio Tiếng Việt", _has_vi)
-col_s3.metric("🇺🇸 Có Audio Tiếng Anh", _has_en)
-col_s4.metric("📋 Chưa xử lý", "?" , help="Dán URL vào để xem")
+@st.fragment(run_every=30)
+def show_stats():
+    _hist = load_history()
+    _total = len(_hist)
+    _has_vi = sum(1 for v in _hist.values() if v.get("audio_vi"))
+    _has_en = sum(1 for v in _hist.values() if v.get("audio_en"))
+    col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+    col_s1.metric("🎤 Tổng URL đã có Audio", _total)
+    col_s2.metric("🇻🇳 Có Audio Tiếng Việt", _has_vi)
+    col_s3.metric("🇺🇸 Có Audio Tiếng Anh", _has_en)
+    col_s4.metric("📋 Chưa xử lý", "?" , help="Dán URL vào để xem")
+
+show_stats()
 st.markdown("---")
 
 # ================= KHOẢNG XÁC THỰC =================
@@ -293,27 +296,27 @@ with st.sidebar:
     
     st.markdown("---")
     
-    # === LỊCH SỬ URL ĐÃ XỬ LÝ ===
+@st.fragment(run_every=30)
+def show_history_sidebar():
     st.markdown("## 📋 Lịch Sử Đã Xử Lý")
     _h = load_history()
     if _h:
         st.markdown(f"**Tổng: {len(_h)} URL** — Copy vào Google Sheet 👇")
-        # Tạo danh sách URL CMS từ dest_id
         url_lines = "\n".join(
             f"https://cms.tatinta.com/destination/action/{did}"
             for did in _h.keys()
         )
         st.code(url_lines, language=None)
-        
-        # Expander xem chi tiết: tên bài + ngày chạy
         with st.expander("📖 Xem chi tiết"):
-            for did, info in list(_h.items())[:50]:  # Giới hạn 50 dòng
+            for did, info in list(_h.items())[:50]:
                 st.markdown(
                     f"• **{info.get('title','?')}**  \n"
                     f"  `{info.get('ran_at','?')}`"
                 )
     else:
         st.info("Chưa có lịch sử nào. Chạy batch đầu tiên đi Sếp!")
+
+show_history_sidebar()
 
 def refresh_tables():
     lw = st.session_state.app_state["waiting"]
