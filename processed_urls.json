@@ -2011,9 +2011,9 @@
   },
   "611a423ec663e44d4ff6fe4b": {
     "title": "Khu du lịch Kotam",
-    "ran_at": "2026-03-03 07:24:08",
-    "audio_vi": "audio/2026/03/03/faudio-1772522642479.mp3",
-    "audio_en": null
+    "ran_at": "2026-03-02 04:56:58",
+    "audio_vi": "audio/2026/03/02/faudio-1772427413266.mp3",
+    "audio_en": "audio/2026/03/02/faudio-1772427396555.mp3"
   },
   "68b28a9c8307c6647949ccfb": {
     "title": "Đà Nẵng - Vòng quay Mặt Trời",
@@ -6106,5 +6106,11 @@
     "ran_at": "2026-03-03 07:24:00",
     "audio_vi": "audio/2026/03/03/faudio-1772522634612.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772522628252.mp3"
+  },
+  "6733668c44b6920df5eca9f2": {
+    "title": "Nhà hàng Du thuyền Cần Thơ",
+    "ran_at": "2026-03-03 07:24:09",
+    "audio_vi": "audio/2026/03/03/faudio-1772522642554.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772522604785.mp3"
   }
 }
