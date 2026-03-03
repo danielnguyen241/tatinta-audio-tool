@@ -205,9 +205,9 @@
   },
   "6066d0ed6dfe2431e916ac4c": {
     "title": "Câu Thi Na (Kushinagar)",
-    "ran_at": "2026-03-02 04:01:20",
-    "audio_vi": "audio/2026/03/02/faudio-1772424075762.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772424026480.mp3"
+    "ran_at": "2026-03-03 07:15:38",
+    "audio_vi": "audio/2026/03/03/faudio-1772522132948.mp3",
+    "audio_en": null
   },
   "6583c2c92a164e5e6fe90a6a": {
     "title": "Du thuyền The Wharf & Potomac",
@@ -5824,11 +5824,5 @@
     "ran_at": "2026-03-03 07:15:32",
     "audio_vi": "audio/2026/03/03/faudio-1772522126792.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772522114117.mp3"
-  },
-  "60fef0e0a3959e72a234a711": {
-    "title": "Bản Sông Moóc",
-    "ran_at": "2026-03-03 07:15:36",
-    "audio_vi": "audio/2026/03/03/faudio-1772522132165.mp3",
-    "audio_en": null
   }
 }
