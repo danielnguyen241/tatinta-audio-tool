@@ -173,26 +173,74 @@ def fix_text_for_tts(title, raw_html):
     if not title and not raw_html: return ""
     clean_content = BeautifulSoup(raw_html, "html.parser").get_text(separator="\n").strip()
     text = f"{title}...\n\n{clean_content}"
-    
-    # 1. Xử lý số có dấu chấm (vd: 1.000 -> 1000) để không bị đọc là "1 chấm 000"
-    # Lặp để xoá hết dấu chấm nếu số lớn (vd: 1.000.000 -> 1000000)
-    text = re.sub(r'(?<=\d)\.(?=\d{3}\b)', '', text)
-    text = re.sub(r'(?<=\d)\.(?=\d{3}\b)', '', text) 
-    
-    # 2. Xử lý đơn vị đo lường đứng sau số (1.000m -> 1000 mét)
-    text = re.sub(r'(?<=\d)\s*m\b', ' mét', text)
-    text = re.sub(r'(?<=\d)\s*km\b', ' ki-lô-mét', text)
-    text = re.sub(r'(?<=\d)\s*kg\b', ' kí', text)
-    text = re.sub(r'(?<=\d)\s*ha\b', ' héc-ta', text)
-    
-    # 3. Ép các từ IN HOA TOÀN BỘ thành Capitalize (CHILL -> Chill) để đánh lừa TTS đọc như một từ bình thường
-    # Lưu ý: các từ như VND, USD thì vẫn có thể bị ảnh hưởng (Vnd, Usd) nên sẽ được đọc như 1 từ
-    def title_case_match(match):
-        return match.group(0).capitalize()
-    
-    text = re.sub(r'\b[A-Z]{2,}\b', title_case_match, text)
-    
-    return text
+    # ══════════════════════════════════════════════════
+    # BƯỚC 0: Xử lý ưu tiên cao (trước khi làm gì khác)
+    # ══════════════════════════════════════════════════
+    # 0.1 Giờ dạng range: "09:30–17:45" → "09:30 đến 17:45"
+    text = re.sub(r'(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})', r'\1 đến \2', text)
+    # 0.2 Thế kỷ La Mã (XIX, XX, XXI, XXII,...) → "thế kỷ 19", "thế kỷ 20"...
+    ROMAN_CENTURY = {
+        'XXI': 21, 'XXII': 22, 'XX': 20, 'XIX': 19, 'XVIII': 18,
+        'XVII': 17, 'XVI': 16, 'XV': 15, 'XIV': 14, 'XIII': 13,
+        'XII': 12, 'XI': 11, 'X': 10, 'IX': 9, 'VIII': 8,
+        'VII': 7, 'VI': 6, 'V': 5, 'IV': 4, 'III': 3, 'II': 2, 'I': 1
+    }
+    # Ưu tiên xử lý "thế kỷ XXI" trước (tránh lặp "thế kỷ thế kỷ 21")
+    def replace_roman_century(m):
+        roman = m.group(1)
+        return f"thế kỷ {ROMAN_CENTURY.get(roman, roman)}"
+    # Khớp cả "thế kỷ XXI" lẫn "XXI" đứng một mình
+    text = re.sub(
+        r'(?:thế kỷ\s+)?(X{0,3}(?:IX|IV|V?I{0,3}))\b',
+        lambda m: replace_roman_century(m) if m.group(1) in ROMAN_CENTURY else m.group(0),
+        text
+    )
+    # ══════════════════════════════════════════════════
+    # BƯỚC 1: Số và đơn vị
+    # ══════════════════════════════════════════════════
+    # 1.1 Tiền tệ
+    text = re.sub(r'\$\s*(\d[\d\.]*)', r'\1 đô la', text)
+    text = re.sub(r'€\s*(\d[\d\.]*)', r'\1 euro', text)
+    text = re.sub(r'(\d[\d\.]*)\s*€', r'\1 euro', text)
+    text = re.sub(r'(\d[\d\.]*)\s*\$', r'\1 đô la', text)
+    # 1.2 Phần trăm: "10%" → "10 phần trăm"
+    text = re.sub(r'(\d+)\s*%', r'\1 phần trăm', text)
+    # 1.3 Số hàng nghìn có dấu chấm (1.000 → 1000, 1.000.000 → 1000000)
+    # Chạy 3 lần để bắt số nhiều phần (tỷ, trăm tỷ...)
+    for _ in range(3):
+        text = re.sub(r'(?<=\d)\.(?=\d{3}(?:\D|$))', '', text)
+    # 1.4 Đơn vị đo lường đứng sau số
+    text = re.sub(r'(?<=\d)\s*km\b',    ' ki-lô-mét', text)
+    text = re.sub(r'(?<=\d)\s*m²\b',    ' mét vuông', text)
+    text = re.sub(r'(?<=\d)\s*m\b',     ' mét', text)
+    text = re.sub(r'(?<=\d)\s*kg\b',    ' ki-lô-gam', text)
+    text = re.sub(r'(?<=\d)\s*ha\b',    ' héc-ta', text)
+    text = re.sub(r'(?<=\d)\s*cm\b',    ' xen-ti-mét', text)
+    # 1.5 Xóa số thứ mục ở đầu dòng: "1. Tiêu đề", "1.1. Kiến trúc", "2.3.1. Chi tiết" → chỉ đọc tên
+    # Xử lý tối đa 3 cấp: X. / X.X. / X.X.X. (có hoặc không có dấu chấm cuối)
+    text = re.sub(r'(?m)^\s*\d+(?:\.\d+)*\.?\s+', '', text)
+    # ══════════════════════════════════════════════════
+    # BƯỚC 2: Dấu câu và ký tự gây nhiễu
+    # ══════════════════════════════════════════════════
+    # 2.1 Dấu gạch ngang dùng làm dấu phân cách (–, —) → khoảng trắng
+    text = re.sub(r'\s*[–—]\s*', ' ', text)
+    # 2.2 Dấu gạch đầu dòng kiểu "- " ở đầu dòng → bỏ đi
+    text = re.sub(r'(?m)^\s*[-•·]\s+', '', text)
+    # 2.3 Dấu ngoặc kép các loại → xóa để không bị ngắt quãng khi đọc
+    # vd: "hòn ngọc xanh" → hòn ngọc xanh (đọc trơn tru, không ngắt)
+    text = re.sub(r'["""„«»''`]', '', text)
+    # 2.4 Các ký tự đặc biệt dễ gây lỗi TTS
+    text = re.sub(r'[*#_~`<>{}|\\]', '', text)
+    # 2.4 Nhiều khoảng trắng/dòng trống liên tiếp → dọn dẹp
+    text = re.sub(r'[ \t]+', ' ', text)
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    # ══════════════════════════════════════════════════
+    # BƯỚC 3: Xử lý chữ IN HOA (cuối cùng — sau khi La Mã đã xong)
+    # ══════════════════════════════════════════════════
+    # Chữ IN HOA toàn bộ từ 2 ký tự trở lên → Capitalize
+    # (CHILL → Chill, BAR → Bar, POOL → Pool)
+    text = re.sub(r'\b[A-Z]{2,}\b', lambda m: m.group(0).capitalize(), text)
+    return text.strip()
 def upload_audio_to_storage(file_path, tok):
     url = 'https://api.tatinta.com/v1/extra/upload/audio'
     tok_clean = tok.strip().strip('"').strip("'")
@@ -266,11 +314,30 @@ with c2:
 with c3:
     title_fail = st.empty()
     area_fail = st.empty()
+# ——— Khu vực copy link thất bại ———
+fail_copy_area = st.empty()
 progress_text = st.empty()
 progress_bar = st.progress(0)
 status_text = st.empty()
-if "popup_visible" not in st.session_state:
-    st.session_state.popup_visible = True
+def render_fail_copy():
+    """Luôn hiển thị khu vực copy link thất bại"""
+    lfail = st.session_state.app_state.get("fail", [])
+    fail_urls = []
+    for item in lfail:
+        raw = item.get("URL", "")
+        if raw.startswith("http"):
+            fail_urls.append(raw)
+        elif re.match(r'^[a-f0-9]{24}$', raw):
+            fail_urls.append(f"https://cms.tatinta.com/destination/action/{raw}")
+    with fail_copy_area.container():
+        st.markdown(f"### 📋 Link thất bại ({len(fail_urls)} link)")
+        if fail_urls:
+            st.code("\n".join(fail_urls), language=None)
+            if st.button("🔁 Dán lại vào ô URL để chạy lại", use_container_width=True):
+                st.session_state.urls_input = "\n".join(fail_urls)
+                st.rerun()
+        else:
+            st.info("✅ Chưa có link thất bại nào!")
 # === SIDEBAR ===
 with st.sidebar:
     st.markdown("## 📊 Theo Dõi Tiến Độ")
@@ -306,6 +373,8 @@ with st.sidebar:
             st.code(url_lines, language=None)
     else:
         st.info("Chưa có lịch sử nào!")
+if "popup_visible" not in st.session_state:
+    st.session_state.popup_visible = True
 def refresh_tables():
     lw = st.session_state.app_state["waiting"]
     lok = st.session_state.app_state["ok"]
@@ -322,6 +391,7 @@ def refresh_tables():
     area_run.dataframe(lw, use_container_width=True, hide_index=True, column_config=col_cfg)
     area_ok.dataframe(lok if lok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
     area_fail.dataframe(lfail if lfail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
+    render_fail_copy()
 refresh_tables()
 async def process_urls(urls_list):
     valid_urls = [u.strip() for u in urls_list if u.strip()]
