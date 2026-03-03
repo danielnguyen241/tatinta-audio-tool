@@ -1807,9 +1807,9 @@
   },
   "60604e6b85f3d51f1e3c7512": {
     "title": "Lâm trường Đông Thế (Dongshih Forest Garden)",
-    "ran_at": "2026-03-02 04:52:57",
-    "audio_vi": "audio/2026/03/02/faudio-1772427171192.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772427132431.mp3"
+    "ran_at": "2026-03-03 08:26:45",
+    "audio_vi": "audio/2026/03/03/faudio-1772526400011.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772526376416.mp3"
   },
   "68b293968307c6647949cd11": {
     "title": "Đà Nẵng - Tàu Pacific",
@@ -7474,11 +7474,5 @@
     "ran_at": "2026-03-03 08:26:41",
     "audio_vi": "audio/2026/03/03/faudio-1772526394951.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772526376810.mp3"
-  },
-  "6593846e8b96db1c418b2ce5": {
-    "title": "Quảng trường Eremitani Padua",
-    "ran_at": "2026-03-03 08:26:44",
-    "audio_vi": "audio/2026/03/03/faudio-1772526397506.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772526389520.mp3"
   }
 }
