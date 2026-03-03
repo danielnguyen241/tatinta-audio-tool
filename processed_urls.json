@@ -4867,9 +4867,9 @@
   },
   "60d6ebc1ae6f066dba6fa6c0": {
     "title": "Nhà hàng Seasons",
-    "ran_at": "2026-03-03 09:10:47",
-    "audio_vi": "audio/2026/03/03/faudio-1772529041905.mp3",
-    "audio_en": null
+    "ran_at": "2026-03-03 03:34:17",
+    "audio_vi": "audio/2026/03/03/faudio-1772508851653.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772508831647.mp3"
   },
   "60d6e857ae6f066dba6fa6b8": {
     "title": "Các quán cà phê bạn không nên bỏ lỡ tại Nursultan",
@@ -8248,5 +8248,11 @@
     "ran_at": "2026-03-03 09:10:38",
     "audio_vi": "audio/2026/03/03/faudio-1772529033834.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772529029910.mp3"
+  },
+  "658d44192af70c2b4dcf4d7e": {
+    "title": "Cao đẳng Fettes - Edinburgh",
+    "ran_at": "2026-03-03 09:10:48",
+    "audio_vi": "audio/2026/03/03/faudio-1772529040948.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772529019540.mp3"
   }
 }
