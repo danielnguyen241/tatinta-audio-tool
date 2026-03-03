@@ -229,9 +229,9 @@
   },
   "6066cb3b6dfe2431e916ac3b": {
     "title": "Quán cà phê Leopold",
-    "ran_at": "2026-03-03 07:17:04",
-    "audio_vi": "audio/2026/03/03/faudio-1772522219992.mp3",
-    "audio_en": null
+    "ran_at": "2026-03-02 04:02:33",
+    "audio_vi": "audio/2026/03/02/faudio-1772424148550.mp3",
+    "audio_en": "audio/2026/03/02/faudio-1772424135798.mp3"
   },
   "612f62736e8b5a656411cf9b": {
     "title": "Nhà Hàng Ẩm Thực Hoa Viên",
@@ -5884,5 +5884,11 @@
     "ran_at": "2026-03-03 07:17:01",
     "audio_vi": "audio/2026/03/03/faudio-1772522216374.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772522206624.mp3"
+  },
+  "655e5df50eabfd28d839af94": {
+    "title": "Những căn phòng Victoria",
+    "ran_at": "2026-03-03 07:17:06",
+    "audio_vi": "audio/2026/03/03/faudio-1772522221291.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772522211110.mp3"
   }
 }
