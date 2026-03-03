@@ -3583,9 +3583,9 @@
   },
   "609f81cb7216f7739c5e0046": {
     "title": "Công viên Gorky (Central Park)",
-    "ran_at": "2026-03-02 06:01:07",
-    "audio_vi": "audio/2026/03/02/faudio-1772431261850.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772431262080.mp3"
+    "ran_at": "2026-03-03 07:01:49",
+    "audio_vi": "audio/2026/03/03/faudio-1772521304482.mp3",
+    "audio_en": null
   },
   "609f7bac7216f7739c5e0041": {
     "title": "Phố mua sắm Arbat (Arbat shopping street)",
@@ -5553,12 +5553,6 @@
     "title": "Chợ Lùng Khấu Nhìn",
     "ran_at": "2026-03-03 06:44:28",
     "audio_vi": "audio/2026/03/03/faudio-1772520262997.mp3",
-    "audio_en": null
-  },
-  "60fd529550d23b2f2140b259": {
-    "title": "Đình Chèm",
-    "ran_at": "2026-03-03 07:01:48",
-    "audio_vi": "audio/2026/03/03/faudio-1772521302728.mp3",
     "audio_en": null
   }
 }
