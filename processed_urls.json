@@ -1729,9 +1729,9 @@
   },
   "6062e69e85f3d51f1e3c75c5": {
     "title": "Cà phê Mậu Dịch",
-    "ran_at": "2026-03-02 04:49:45",
-    "audio_vi": "audio/2026/03/02/faudio-1772426980357.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772426968904.mp3"
+    "ran_at": "2026-03-03 08:24:10",
+    "audio_vi": "audio/2026/03/03/faudio-1772526245690.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772526230882.mp3"
   },
   "6126102b6e8b5a656411cc70": {
     "title": "Quán Tom & Café Studio",
@@ -7414,11 +7414,5 @@
     "ran_at": "2026-03-03 08:23:56",
     "audio_vi": "audio/2026/03/03/faudio-1772526229093.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772526219939.mp3"
-  },
-  "655745b5c3dbcf49f9b91c64": {
-    "title": "Nhà thờ St John Grassmarket",
-    "ran_at": "2026-03-03 08:24:07",
-    "audio_vi": "audio/2026/03/03/faudio-1772526242761.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772526233031.mp3"
   }
 }
