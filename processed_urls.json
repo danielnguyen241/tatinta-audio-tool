@@ -1195,9 +1195,9 @@
   },
   "606302c985f3d51f1e3c7656": {
     "title": "Đền thờ Khổng Tử Đài Trung (Taichung Confucius Temple)",
-    "ran_at": "2026-03-02 04:32:56",
-    "audio_vi": "audio/2026/03/02/faudio-1772425971264.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772425940048.mp3"
+    "ran_at": "2026-03-03 08:13:22",
+    "audio_vi": "audio/2026/03/03/faudio-1772525596593.mp3",
+    "audio_en": null
   },
   "608128e55b75486b5db2e83a": {
     "title": "Lucky Pub",
@@ -7126,11 +7126,5 @@
     "ran_at": "2026-03-03 08:13:18",
     "audio_vi": "audio/2026/03/03/faudio-1772525588284.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772525589688.mp3"
-  },
-  "655b126c0910af30a63958ec": {
-    "title": "Giao lộ Princesa và Alberto Aguilera",
-    "ran_at": "2026-03-03 08:13:20",
-    "audio_vi": "audio/2026/03/03/faudio-1772525593876.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772525594711.mp3"
   }
 }
