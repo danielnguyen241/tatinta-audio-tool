@@ -1,4 +1,6 @@
 import streamlit as st
+import streamlit.components.v1 as components
+import html as html_lib
 import asyncio
 import os
 import re
@@ -265,20 +267,26 @@ def fix_text_for_tts(title, raw_html):
     # BƯỚC 2: Dấu câu và ký tự gây nhiễu
     # ══════════════════════════════════════════════════
 
-    # 2.1 Dấu gạch ngang dùng làm dấu phân cách (–, —) → khoảng trắng
-    text = re.sub(r'\s*[–—]\s*', ' ', text)
+    # 2.1 Dấu gạch ngang Unicode (–, —) → dấu phẩy để TTS ngắt nhẹ
+    text = re.sub(r'\s*[\u2013\u2014]\s*', ', ', text)  # → dấu phẩy để TTS ngắt nhẹ
 
-    # 2.2 Dấu gạch đầu dòng kiểu "- " ở đầu dòng → bỏ đi
+    # 2.2a Dấu gạch đầu dòng ở đầu dòng → bỏ đi
     text = re.sub(r'(?m)^\s*[-•·]\s+', '', text)
 
-    # 2.3 Dấu ngoặc kép các loại → xóa để không bị ngắt quãng khi đọc
-    # vd: "hòn ngọc xanh" → hòn ngọc xanh (đọc trơn tru, không ngắt)
-    text = re.sub(r'["""„«»''`]', '', text)
+    # 2.2b Dấu - ASCII có khoảng trắng 2 bên ( - ) → dấu phẩy để ngắt nhẹ
+    # check-in, check-out (không có space) sẽ KHÔNG bị ảnh hưởng
+    text = re.sub(r' - ', ', ', text)
+
+    # 2.3 Dấu ngoặc kép — xóa CHẮC CHẮN từng loại một
+    for q in ['"', '“', '”', '„', '‛', '‚',
+              '«', '»', '‹', '›',
+              "'", '‘', '’', '`']:
+        text = text.replace(q, '')
 
     # 2.4 Các ký tự đặc biệt dễ gây lỗi TTS
-    text = re.sub(r'[*#_~`<>{}|\\]', '', text)
+    text = re.sub(r'[*#_~`<>{}|\\\\]', '', text)
 
-    # 2.4 Nhiều khoảng trắng/dòng trống liên tiếp → dọn dẹp
+    # 2.5 Nhiều khoảng trắng/dòng trống liên tiếp → dọn dẹp
     text = re.sub(r'[ \t]+', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
 
@@ -287,8 +295,15 @@ def fix_text_for_tts(title, raw_html):
     # ══════════════════════════════════════════════════
 
     # Chữ IN HOA toàn bộ từ 2 ký tự trở lên → Capitalize
-    # (CHILL → Chill, BAR → Bar, POOL → Pool)
     text = re.sub(r'\b[A-Z]{2,}\b', lambda m: m.group(0).capitalize(), text)
+
+    # ══════════════════════════════════════════════════
+    # BƯỚC CUỐI: SSML Safety — EdgeTTS dùng XML bên trong
+    # Ký tự XML đặc biệt còn sót sẽ phá vỡ audio generation
+    # ══════════════════════════════════════════════════
+    text = text.replace('<', '')        # XML tag opener
+    text = text.replace('>', '')        # XML tag closer
+    text = text.replace('&', ' và ')    # XML entity marker → đọc thành và
 
     return text.strip()
 
@@ -449,6 +464,49 @@ with st.sidebar:
 if "popup_visible" not in st.session_state:
     st.session_state.popup_visible = True
 
+def clipboard_copy_button(text: str, label: str, btn_id: str):
+    """Render nút copy vào clipboard bằng JS.
+    Dùng hidden <pre> để chứa text — tránh hoàn toàn vấn đề escape
+    với các ký tự đặc biệt như \", `, $, &, <, >...
+    """
+    # html.escape() để safe trong HTML content (không phải attribute)
+    safe_text = html_lib.escape(text)
+    label_escaped = html_lib.escape(label)
+    components.html(f"""
+    <pre id="data_{btn_id}" style="display:none;white-space:pre-wrap">{safe_text}</pre>
+    <button id="{btn_id}" onclick="
+        var txt = document.getElementById('data_{btn_id}').textContent;
+        var btn = document.getElementById('{btn_id}');
+        function setOK() {{
+            btn.innerHTML = '&#10003; Đã copy vào clipboard!';
+            btn.style.background = '#00c853';
+            setTimeout(function() {{
+                btn.innerHTML = '{label_escaped}';
+                btn.style.background = '#ff4b4b';
+            }}, 2500);
+        }}
+        if (navigator.clipboard && navigator.clipboard.writeText) {{
+            navigator.clipboard.writeText(txt).then(setOK).catch(function() {{
+                fallback(txt);
+            }});
+        }} else {{ fallback(txt); }}
+        function fallback(t) {{
+            var ta = document.createElement('textarea');
+            ta.value = t;
+            ta.style.cssText = 'position:fixed;opacity:0;top:0;left:0';
+            document.body.appendChild(ta);
+            ta.focus(); ta.select();
+            try {{ document.execCommand('copy'); setOK(); }} catch(e) {{}}
+            document.body.removeChild(ta);
+        }}
+    " style="
+        background:#ff4b4b;color:white;border:none;
+        border-radius:8px;padding:9px 16px;cursor:pointer;
+        font-size:14px;font-weight:600;width:100%;
+        transition:background 0.3s;font-family:sans-serif;
+    ">{label_escaped}</button>
+    """, height=48)
+
 def refresh_tables():
     lw = st.session_state.app_state["waiting"]
     lok = st.session_state.app_state["ok"]
@@ -466,7 +524,9 @@ def refresh_tables():
     area_ok.dataframe(lok if lok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
     area_fail.dataframe(lfail if lfail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
 
-    # ——— Copy URL cho từng khu vực ———
+    # ——— Copy URL vào clipboard cho từng khu vực ———
+    ctr = st.session_state._fail_btn_counter
+
     run_urls = []
     for item in lw:
         raw = item.get("URL", "")
@@ -476,8 +536,12 @@ def refresh_tables():
             run_urls.append(f"https://cms.tatinta.com/destination/action/{raw}")
     with copy_run.container():
         if run_urls:
-            st.caption(f"📋 Copy {len(run_urls)} URL đang chạy:")
-            st.code("\n".join(run_urls), language=None)
+            run_txt = "\n".join(run_urls)
+            st.text_area("🏃 URLs đang chạy:", value=run_txt, height=80,
+                key=f"ta_run_{ctr}", disabled=False)
+            clipboard_copy_button(run_txt,
+                label=f"📋 Copy {len(run_urls)} URL đang chạy",
+                btn_id=f"btn_run_{ctr}")
 
     ok_urls = []
     for item in lok:
@@ -486,8 +550,12 @@ def refresh_tables():
             ok_urls.append(raw)
     with copy_ok.container():
         if ok_urls:
-            st.caption(f"📋 Copy {len(ok_urls)} URL thành công:")
-            st.code("\n".join(ok_urls), language=None)
+            ok_txt = "\n".join(ok_urls)
+            st.text_area("✅ URLs thành công:", value=ok_txt, height=80,
+                key=f"ta_ok_{ctr}", disabled=False)
+            clipboard_copy_button(ok_txt,
+                label=f"📋 Copy {len(ok_urls)} URL thành công",
+                btn_id=f"btn_ok_{ctr}")
 
     fail_urls_copy = []
     for item in lfail:
@@ -498,8 +566,12 @@ def refresh_tables():
             fail_urls_copy.append(f"https://cms.tatinta.com/destination/action/{raw}")
     with copy_fail.container():
         if fail_urls_copy:
-            st.caption(f"📋 Copy {len(fail_urls_copy)} URL thất bại:")
-            st.code("\n".join(fail_urls_copy), language=None)
+            fail_copy_txt = "\n".join(fail_urls_copy)
+            st.text_area("❌ URLs thất bại:", value=fail_copy_txt, height=80,
+                key=f"ta_fail_{ctr}", disabled=False)
+            clipboard_copy_button(fail_copy_txt,
+                label=f"📋 Copy {len(fail_urls_copy)} URL thất bại",
+                btn_id=f"btn_fail_{ctr}")
 
     render_fail_copy()
 
