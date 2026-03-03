@@ -171,7 +171,16 @@ urls_text = st.text_area("Mỗi dòng 1 URL:", height=200,
     key="urls_input")
 def fix_text_for_tts(title, raw_html):
     if not title and not raw_html: return ""
-    clean_content = BeautifulSoup(raw_html, "html.parser").get_text(separator="\n").strip()
+    
+    # Parse HTML
+    soup = BeautifulSoup(raw_html, "html.parser")
+    
+    # Unwrap các thẻ inline để tránh newline xung quanh từ bôi đen/nghiêng
+    # "Nhà thờ <strong>Gothic</strong> nổi tiếng" → "Nhà thờ Gothic nổi tiếng"
+    for tag in soup.find_all(['strong', 'b', 'em', 'i', 'u', 'span', 'a', 'mark', 'small', 'sub', 'sup']):
+        tag.unwrap()
+    
+    clean_content = soup.get_text(separator="\n").strip()
     text = f"{title}...\n\n{clean_content}"
     # ══════════════════════════════════════════════════
     # BƯỚC 0: Xử lý ưu tiên cao (trước khi làm gì khác)
