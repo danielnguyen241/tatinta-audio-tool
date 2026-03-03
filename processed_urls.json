@@ -1531,9 +1531,9 @@
   },
   "6062ef6a85f3d51f1e3c75ed": {
     "title": "Lễ hội Mai An Tiêm",
-    "ran_at": "2026-03-02 04:39:14",
-    "audio_vi": "audio/2026/03/02/faudio-1772426349495.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772426339476.mp3"
+    "ran_at": "2026-03-03 08:23:05",
+    "audio_vi": "audio/2026/03/03/faudio-1772526180488.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772526172783.mp3"
   },
   "61375956d547396c8aff0a12": {
     "title": "Bãi Dài",
@@ -7384,11 +7384,5 @@
     "ran_at": "2026-03-03 08:22:58",
     "audio_vi": "audio/2026/03/03/faudio-1772526172787.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772526166457.mp3"
-  },
-  "65938b7a8b96db1c418b2cfe": {
-    "title": "Vương cung thánh đường S. Zeno",
-    "ran_at": "2026-03-03 08:23:03",
-    "audio_vi": "audio/2026/03/03/faudio-1772526175495.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772526161041.mp3"
   }
 }
