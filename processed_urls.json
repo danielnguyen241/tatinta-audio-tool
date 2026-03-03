@@ -619,9 +619,9 @@
   },
   "60657b206dfe2431e916abce": {
     "title": "Hồ Powai",
-    "ran_at": "2026-03-02 04:14:04",
-    "audio_vi": "audio/2026/03/02/faudio-1772424839804.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772424823564.mp3"
+    "ran_at": "2026-03-03 07:25:13",
+    "audio_vi": "audio/2026/03/03/faudio-1772522708224.mp3",
+    "audio_en": null
   },
   "612c8a536e8b5a656411cebe": {
     "title": "FLC Zoo Safari Park Quy Nhơn",
@@ -6142,11 +6142,5 @@
     "ran_at": "2026-03-03 07:25:00",
     "audio_vi": "audio/2026/03/03/faudio-1772522694842.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772522665580.mp3"
-  },
-  "6733018d2154fb426ce04c9e": {
-    "title": "Chợ Cần Thơ",
-    "ran_at": "2026-03-03 07:25:12",
-    "audio_vi": "audio/2026/03/03/faudio-1772522704579.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772522674855.mp3"
   }
 }
