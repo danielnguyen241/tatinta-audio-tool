@@ -217,9 +217,9 @@
   },
   "6066cf946dfe2431e916ac45": {
     "title": "Vườn Lộc Uyển (Sarnath)",
-    "ran_at": "2026-03-02 04:02:07",
-    "audio_vi": "audio/2026/03/02/faudio-1772424122539.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772424095984.mp3"
+    "ran_at": "2026-03-03 07:16:35",
+    "audio_vi": "audio/2026/03/03/faudio-1772522189871.mp3",
+    "audio_en": null
   },
   "658290552a164e5e6fe908be": {
     "title": "Chinatown Central Plaza",
@@ -5860,11 +5860,5 @@
     "ran_at": "2026-03-03 07:16:25",
     "audio_vi": "audio/2026/03/03/faudio-1772522179356.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772522157895.mp3"
-  },
-  "676e36016bb6b943557ed979": {
-    "title": "Làng nghề chạm khắc gỗ",
-    "ran_at": "2026-03-03 07:16:34",
-    "audio_vi": "audio/2026/03/03/faudio-1772522189259.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772522164606.mp3"
   }
 }
