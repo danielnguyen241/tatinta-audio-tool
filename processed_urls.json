@@ -3337,9 +3337,9 @@
   },
   "60fef3cda3959e72a234a741": {
     "title": "Chợ Trời (Chợ Giời)",
-    "ran_at": "2026-03-02 05:53:02",
-    "audio_vi": "audio/2026/03/02/faudio-1772430777268.mp3",
-    "audio_en": "audio/2026/03/02/faudio-1772430752933.mp3"
+    "ran_at": "2026-03-03 07:13:34",
+    "audio_vi": "audio/2026/03/03/faudio-1772522009671.mp3",
+    "audio_en": null
   },
   "60fa2ba550d23b2f2140b0a7": {
     "title": "Đan viện Châu Sơn",
@@ -5746,11 +5746,5 @@
     "ran_at": "2026-03-03 07:13:26",
     "audio_vi": "audio/2026/03/03/faudio-1772522001588.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772521983258.mp3"
-  },
-  "656ef38ee16b6b573ec6c71e": {
-    "title": "Santa Ana",
-    "ran_at": "2026-03-03 07:13:33",
-    "audio_vi": "audio/2026/03/03/faudio-1772522007896.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772521996276.mp3"
   }
 }
