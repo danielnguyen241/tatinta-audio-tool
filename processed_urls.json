@@ -337,9 +337,9 @@
   },
   "6983207d232a2e5667d8ea1c": {
     "title": "Chạng Vạng Rooftop",
-    "ran_at": "2026-03-03 07:20:54",
-    "audio_vi": "audio/2026/03/03/faudio-1772522448635.mp3",
-    "audio_en": null
+    "ran_at": "2026-03-03 07:34:33",
+    "audio_vi": "audio/2026/03/03/faudio-1772523262798.mp3",
+    "audio_en": "audio/2026/03/03/faudio-1772523268937.mp3"
   },
   "60974cb3a26197251491b812": {
     "title": "Công viên Panfilov (Panfilov Park)",
@@ -6298,11 +6298,5 @@
     "ran_at": "2026-03-03 07:34:27",
     "audio_vi": "audio/2026/03/03/faudio-1772523257217.mp3",
     "audio_en": "audio/2026/03/03/faudio-1772523258791.mp3"
-  },
-  "656621ad0d6f560458a30ea4": {
-    "title": "Sathorn Central Pier",
-    "ran_at": "2026-03-03 07:34:32",
-    "audio_vi": "audio/2026/03/03/faudio-1772523268014.mp3",
-    "audio_en": "audio/2026/03/03/faudio-1772523262200.mp3"
   }
 }
