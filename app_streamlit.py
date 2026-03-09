@@ -12,18 +12,15 @@ import shutil
 import edge_tts
 import time
 from datetime import datetime
-
 HISTORY_FILE = "processed_urls.json"
 GITHUB_REPO = "danielnguyen241/tatinta-audio-tool"
 GITHUB_API_URL = f"https://api.github.com/repos/{GITHUB_REPO}/contents/{HISTORY_FILE}"
-
 def _get_github_token():
     """Lấy GitHub PAT từ Streamlit Secrets hoặc local env"""
     try:
         return st.secrets.get("GITHUB_TOKEN", "")
     except:
         return os.environ.get("GITHUB_TOKEN", "")
-
 def load_history():
     """Load lịch sử từ GitHub (share giữa mọi user), fallback sang local file"""
     gh_token = _get_github_token()
@@ -46,7 +43,6 @@ def load_history():
         except:
             return {}
     return {}
-
 def save_to_history(dest_id, title, audio_vi=None, audio_en=None):
     """Lưu lịch sử lên GitHub (share giữa mọi user) và local file"""
     history = load_history()
@@ -85,12 +81,9 @@ def save_to_history(dest_id, title, audio_vi=None, audio_en=None):
             requests.put(GITHUB_API_URL, headers=headers, json=payload, timeout=10)
         except:
             pass  # Fallback: local lưu rồi, GitHub lỗi thì kệ
-
 st.set_page_config(page_title="Tatinta Audio Automator", page_icon="🎙️", layout="wide")
-
 # ================= GIAO DIỆN CHÍNH =================
 st.title("🎙️ Hệ Thống Tự Động Thu Âm & Ghép Nhạc Tatinta CMS")
-
 @st.fragment(run_every=30)
 def show_stats():
     _hist = load_history()
@@ -102,27 +95,21 @@ def show_stats():
     col_s2.metric("🇻🇳 Có Audio Tiếng Việt", _has_vi)
     col_s3.metric("🇺🇸 Có Audio Tiếng Anh", _has_en)
     col_s4.metric("📋 Chưa xử lý", "?" , help="Dán URL vào để xem")
-
 show_stats()
 st.markdown("---")
-
 # ================= KHOẢNG XÁC THỰC =================
 st.subheader("🔑 1. Xác thực (Bearer Token)")
-
 TOKEN_FILE = "saved_token.txt"
 if os.path.exists(TOKEN_FILE):
     with open(TOKEN_FILE, "r") as f:
         default_token = f.read().strip()
 else:
     default_token = ""
-
 token = st.text_input("Dán chuỗi Token (bắt đầu bằng eyJ) vào đây:", value=default_token, type="password")
-
 if token and token != default_token and len(token) > 50:
     with open(TOKEN_FILE, "w") as f:
         f.write(token.strip())
     st.success("✅ Đã tự động Trữ đông Token dùng chung cho toàn bộ Team rồi nha Sếp!")
-
 with st.expander("Cách lấy Token (F12)"):
     st.markdown("""
     1. Vào trang cms.tatinta.com.
@@ -133,28 +120,23 @@ with st.expander("Cách lấy Token (F12)"):
     (function(){const r=/eyJ[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+\.[a-zA-Z0-9\-_]+/; let t=document.cookie.match(r); if(!t){for(let cur of [localStorage, sessionStorage]){for(let i=0; i<cur.length; i++){let k=cur.key(i); let v=cur.getItem(k); if(v && r.test(v)){t=v.match(r); break;}} if(t) break;}} if(t){prompt("Copy Token bên dưới để dán vào Tool:", t[0]);} else{alert("Không tìm thấy Token!");}})();
     ```
     """)
-
 # ================= KHOẢNG CẤU HÌNH VOICE =================
 st.subheader("⚙️ 2. Cấu hình Giọng Đọc (TTS) & Ngôn ngữ")
 col1, col2 = st.columns(2)
-
 with col1:
     run_vi = st.checkbox("✅ Tạo Tiếng Việt", value=True)
     voice_vi = st.selectbox("Giọng Tiếng Việt", ["vi-VN-NamMinhNeural", "vi-VN-HoaiMyNeural"])
     rate_vi = st.slider("Tốc độ VI (%)", -50, 50, 5)
     pitch_vi = st.slider("Độ trầm (Hz)", -20, 20, -10)
-
 with col2:
     run_en = st.checkbox("✅ Tạo Tiếng Anh", value=True)
     voice_en = st.selectbox("Giọng Tiếng Anh", ["en-US-GuyNeural", "en-US-ChristopherNeural", "en-US-AriaNeural"])
     rate_en = st.slider("Tốc độ EN (%)", -50, 50, 0)
     pitch_en = st.slider("Độ trầm EN (Hz)", -20, 20, -2)
-
 # ================= KHOẢNG CẤU HÌNH NHẠC NỀN =================
 st.subheader("🎵 3. Cấu hình Nhạc Nền (BGM)")
 bgm_upload = st.file_uploader("Upload file nhạc nền (.mp3) - Không bắt buộc", type=["mp3"])
 bgm_volume_db = st.slider("Giảm Volume Nhạc Nền (dB)", -50, 0, -20)
-
 use_bgm = True
 bgm_path = "bgm_default.mp3"
 if bgm_upload:
@@ -167,13 +149,10 @@ else:
         use_bgm = False
     elif os.path.exists("Hovering Thoughts - Spence.mp3"):
         bgm_path = "Hovering Thoughts - Spence.mp3"
-
 # ================= KHU VỰC URLs VÀ KHỞI CHẠY =================
 st.subheader("🔗 4. Nhập danh sách URLs (Tatinta CMS)")
-
 if "urls_input" not in st.session_state:
     st.session_state.urls_input = ""
-
 col_url_btn1, col_url_btn2 = st.columns([4, 1])
 with col_url_btn2:
     if st.button("🧹 Xóa URL đã xong", use_container_width=True, help="Xóa khỏi ô nhập những URL đã chạy thành công"):
@@ -189,11 +168,9 @@ with col_url_btn2:
             filtered.append(line)
         st.session_state.urls_input = "\n".join(filtered)
         st.rerun()
-
 urls_text = st.text_area("Mỗi dòng 1 URL:", height=200,
     placeholder="https://cms.tatinta.com/destination/action/698afc6c1b29cd1e8cc1b826",
     key="urls_input")
-
 def fix_text_for_tts(title, raw_html):
     if not title and not raw_html: return ""
     
@@ -207,14 +184,11 @@ def fix_text_for_tts(title, raw_html):
     
     clean_content = soup.get_text(separator="\n").strip()
     text = f"{title}...\n\n{clean_content}"
-
     # ══════════════════════════════════════════════════
     # BƯỚC 0: Xử lý ưu tiên cao (trước khi làm gì khác)
     # ══════════════════════════════════════════════════
-
     # 0.1 Giờ dạng range: "09:30–17:45" → "09:30 đến 17:45"
     text = re.sub(r'(\d{1,2}:\d{2})\s*[–—-]\s*(\d{1,2}:\d{2})', r'\1 đến \2', text)
-
     # 0.2 Thế kỷ La Mã (XIX, XX, XXI, XXII,...) → "thế kỷ 19", "thế kỷ 20"...
     ROMAN_CENTURY = {
         'XXI': 21, 'XXII': 22, 'XX': 20, 'XIX': 19, 'XVIII': 18,
@@ -232,25 +206,20 @@ def fix_text_for_tts(title, raw_html):
         lambda m: replace_roman_century(m) if m.group(1) in ROMAN_CENTURY else m.group(0),
         text
     )
-
     # ══════════════════════════════════════════════════
     # BƯỚC 1: Số và đơn vị
     # ══════════════════════════════════════════════════
-
     # 1.1 Tiền tệ
     text = re.sub(r'\$\s*(\d[\d\.]*)', r'\1 đô la', text)
     text = re.sub(r'€\s*(\d[\d\.]*)', r'\1 euro', text)
     text = re.sub(r'(\d[\d\.]*)\s*€', r'\1 euro', text)
     text = re.sub(r'(\d[\d\.]*)\s*\$', r'\1 đô la', text)
-
     # 1.2 Phần trăm: "10%" → "10 phần trăm"
     text = re.sub(r'(\d+)\s*%', r'\1 phần trăm', text)
-
     # 1.3 Số hàng nghìn có dấu chấm (1.000 → 1000, 1.000.000 → 1000000)
     # Chạy 3 lần để bắt số nhiều phần (tỷ, trăm tỷ...)
     for _ in range(3):
         text = re.sub(r'(?<=\d)\.(?=\d{3}(?:\D|$))', '', text)
-
     # 1.4 Đơn vị đo lường đứng sau số
     text = re.sub(r'(?<=\d)\s*km\b',    ' ki-lô-mét', text)
     text = re.sub(r'(?<=\d)\s*m²\b',    ' mét vuông', text)
@@ -258,45 +227,34 @@ def fix_text_for_tts(title, raw_html):
     text = re.sub(r'(?<=\d)\s*kg\b',    ' ki-lô-gam', text)
     text = re.sub(r'(?<=\d)\s*ha\b',    ' héc-ta', text)
     text = re.sub(r'(?<=\d)\s*cm\b',    ' xen-ti-mét', text)
-
     # 1.5 Xóa số thứ mục ở đầu dòng: "1. Tiêu đề", "1.1. Kiến trúc", "2.3.1. Chi tiết" → chỉ đọc tên
     # Xử lý tối đa 3 cấp: X. / X.X. / X.X.X. (có hoặc không có dấu chấm cuối)
     text = re.sub(r'(?m)^\s*\d+(?:\.\d+)*\.?\s+', '', text)
-
     # ══════════════════════════════════════════════════
     # BƯỚC 2: Dấu câu và ký tự gây nhiễu
     # ══════════════════════════════════════════════════
-
     # 2.1 Dấu gạch ngang Unicode (–, —) → dấu phẩy để TTS ngắt nhẹ
     text = re.sub(r'\s*[\u2013\u2014]\s*', ', ', text)  # → dấu phẩy để TTS ngắt nhẹ
-
     # 2.2a Dấu gạch đầu dòng ở đầu dòng → bỏ đi
     text = re.sub(r'(?m)^\s*[-•·]\s+', '', text)
-
     # 2.2b Dấu - ASCII có khoảng trắng 2 bên ( - ) → dấu phẩy để ngắt nhẹ
     # check-in, check-out (không có space) sẽ KHÔNG bị ảnh hưởng
     text = re.sub(r' - ', ', ', text)
-
     # 2.3 Dấu ngoặc kép — xóa CHẮC CHẮN từng loại một
     for q in ['"', '“', '”', '„', '‛', '‚',
               '«', '»', '‹', '›',
               "'", '‘', '’', '`']:
         text = text.replace(q, '')
-
     # 2.4 Các ký tự đặc biệt dễ gây lỗi TTS
     text = re.sub(r'[*#_~`<>{}|\\\\]', '', text)
-
     # 2.5 Nhiều khoảng trắng/dòng trống liên tiếp → dọn dẹp
     text = re.sub(r'[ \t]+', ' ', text)
     text = re.sub(r'\n{3,}', '\n\n', text)
-
     # ══════════════════════════════════════════════════
     # BƯỚC 3: Xử lý chữ IN HOA (cuối cùng — sau khi La Mã đã xong)
     # ══════════════════════════════════════════════════
-
     # Chữ IN HOA toàn bộ từ 2 ký tự trở lên → Capitalize
     text = re.sub(r'\b[A-Z]{2,}\b', lambda m: m.group(0).capitalize(), text)
-
     # ══════════════════════════════════════════════════
     # BƯỚC CUỐI: SSML Safety — EdgeTTS dùng XML bên trong
     # Ký tự XML đặc biệt còn sót sẽ phá vỡ audio generation
@@ -304,10 +262,7 @@ def fix_text_for_tts(title, raw_html):
     text = text.replace('<', '')        # XML tag opener
     text = text.replace('>', '')        # XML tag closer
     text = text.replace('&', ' và ')    # XML entity marker → đọc thành và
-
     return text.strip()
-
-
 def upload_audio_to_storage(file_path, tok):
     url = 'https://api.tatinta.com/v1/extra/upload/audio'
     tok_clean = tok.strip().strip('"').strip("'")
@@ -325,7 +280,6 @@ def upload_audio_to_storage(file_path, tok):
         return resp.json().get('data', {}).get('filename')
     # Raise lỗi rõ ràng để debug dễ hơn
     raise Exception(f"Upload API lỗi HTTP {resp.status_code}: {resp.text[:200]}")
-
 def save_file_to_permanent(tmp_filename, tok):
     """Gọi API save-file để move file từ tmp/ sang permanent storage.
     Returns permanent URL dạng 'audio/YYYY/MM/DD/faudio-xxx.mp3'"""
@@ -345,7 +299,6 @@ def save_file_to_permanent(tmp_filename, tok):
     if resp.status_code in [200, 201]:
         return resp.json().get('data', {}).get('url')
     return tmp_filename  # Fallback: dùng tmp path nếu save-file fail
-
 def mix_audio(tts_file, bgm_file, output_file, db_reduce):
     if bgm_file and os.path.exists(bgm_file):
         try:
@@ -365,7 +318,6 @@ def mix_audio(tts_file, bgm_file, output_file, db_reduce):
             pass
     # Nếu ko có nhạc hoặc lỗi (copy thẳng tts file sang)
     shutil.copy2(tts_file, output_file)
-
 # ================= GIAO DIỆN BẢNG THEO DÕI =================
 if "app_state" not in st.session_state:
     st.session_state.app_state = {
@@ -373,10 +325,8 @@ if "app_state" not in st.session_state:
         "ok": [],
         "fail": []
     }
-
 if "_fail_btn_counter" not in st.session_state:
     st.session_state._fail_btn_counter = 0
-
 st.markdown("---")
 c1, c2, c3 = st.columns(3)
 with c1:
@@ -391,18 +341,14 @@ with c3:
     title_fail = st.empty()
     area_fail = st.empty()
     copy_fail = st.empty()
-
 # ——— Khu vực copy link thất bại ———
 fail_copy_area = st.empty()
-
 progress_text = st.empty()
 progress_bar = st.progress(0)
 status_text = st.empty()
-
 def render_fail_copy():
     """Luôn hiển thị khu vực copy link thất bại"""
     lfail = st.session_state.app_state.get("fail", [])
-
     fail_urls = []
     for item in lfail:
         raw = item.get("URL", "")
@@ -410,7 +356,6 @@ def render_fail_copy():
             fail_urls.append(raw)
         elif re.match(r'^[a-f0-9]{24}$', raw):
             fail_urls.append(f"https://cms.tatinta.com/destination/action/{raw}")
-
     st.session_state._fail_btn_counter += 1
     _btn_key = f"fail_rerun_btn_{st.session_state._fail_btn_counter}"
     with fail_copy_area.container():
@@ -422,9 +367,6 @@ def render_fail_copy():
                 st.rerun()
         else:
             st.info("✅ Chưa có link thất bại nào!")
-
-
-
 # === SIDEBAR ===
 with st.sidebar:
     st.markdown("## 📊 Theo Dõi Tiến Độ")
@@ -460,10 +402,8 @@ with st.sidebar:
             st.code(url_lines, language=None)
     else:
         st.info("Chưa có lịch sử nào!")
-
 if "popup_visible" not in st.session_state:
     st.session_state.popup_visible = True
-
 def clipboard_copy_button(text: str, label: str, btn_id: str):
     """Render nút copy vào clipboard bằng JS.
     Dùng hidden <pre> để chứa text — tránh hoàn toàn vấn đề escape
@@ -506,7 +446,6 @@ def clipboard_copy_button(text: str, label: str, btn_id: str):
         transition:background 0.3s;font-family:sans-serif;
     ">{label_escaped}</button>
     """, height=48)
-
 def refresh_tables():
     lw = st.session_state.app_state["waiting"]
     lok = st.session_state.app_state["ok"]
@@ -523,10 +462,8 @@ def refresh_tables():
     area_run.dataframe(lw, use_container_width=True, hide_index=True, column_config=col_cfg)
     area_ok.dataframe(lok if lok else [{"Trống": "Chưa có"}], use_container_width=True, hide_index=True, column_config=col_cfg)
     area_fail.dataframe(lfail if lfail else [{"Trống": "Chưa có lỗi"}], use_container_width=True, hide_index=True, column_config=col_cfg)
-
     # ——— Copy URL vào clipboard cho từng khu vực ———
     ctr = st.session_state._fail_btn_counter
-
     run_urls = []
     for item in lw:
         raw = item.get("URL", "")
@@ -542,7 +479,6 @@ def refresh_tables():
             clipboard_copy_button(run_txt,
                 label=f"📋 Copy {len(run_urls)} URL đang chạy",
                 btn_id=f"btn_run_{ctr}")
-
     ok_urls = []
     for item in lok:
         raw = item.get("URL CMS", "")
@@ -556,7 +492,6 @@ def refresh_tables():
             clipboard_copy_button(ok_txt,
                 label=f"📋 Copy {len(ok_urls)} URL thành công",
                 btn_id=f"btn_ok_{ctr}")
-
     fail_urls_copy = []
     for item in lfail:
         raw = item.get("URL", "")
@@ -572,11 +507,8 @@ def refresh_tables():
             clipboard_copy_button(fail_copy_txt,
                 label=f"📋 Copy {len(fail_urls_copy)} URL thất bại",
                 btn_id=f"btn_fail_{ctr}")
-
     render_fail_copy()
-
 refresh_tables()
-
 async def process_urls(urls_list):
     valid_urls = [u.strip() for u in urls_list if u.strip()]
     if not valid_urls:
@@ -589,7 +521,6 @@ async def process_urls(urls_list):
     sidebar_ok_count.markdown("")
     sidebar_fail_count.markdown("")
     sidebar_bar.progress(0)
-
     st.session_state.app_state["waiting"] = [{"URL": u, "Trạng thái": "⏳ Đang chờ"} for u in valid_urls]
     st.session_state.app_state["ok"] = []
     st.session_state.app_state["fail"] = []
@@ -690,7 +621,6 @@ async def process_urls(urls_list):
             if os.path.exists(raw_f): os.remove(raw_f)
             if os.path.exists(mix_f): os.remove(mix_f)
             return permanent_url
-
         try:
             tasks = []
             if run_vi:
@@ -751,7 +681,6 @@ async def process_urls(urls_list):
         
         progress_bar.progress((idx + 1) / len(valid_urls))
         await asyncio.sleep(0.2)
-
     status_text.text("🎉 HOÀN TẤT TOÀN BỘ QUÁ TRÌNH!")
     lok_final = st.session_state.app_state["ok"]
     lfail_final = st.session_state.app_state["fail"]
@@ -761,12 +690,10 @@ async def process_urls(urls_list):
     sidebar_ok_count.markdown(f"✅ **{len(lok_final)}** thành công | ❌ **{len(lfail_final)}** thất bại")
     sidebar_status.success("🎉 Cày DATA XONG!")
     progress_text.markdown("")
-
 # ================= KHU VỰC NHẬP URL =================
 history = load_history()
 urls_list_raw = urls_text.strip().split("\n") if urls_text.strip() else []
 urls_list_raw = [u.strip() for u in urls_list_raw if len(u.strip()) > 5]
-
 # Hiện thị preview các URL đã chạy / chưa chạy
 if urls_list_raw:
     already_done = []
@@ -789,7 +716,6 @@ else:
     skip_done = False
     already_done = []
     not_yet = urls_list_raw
-
 if st.button("🚀 BẮT ĐẦU XỬ LÝ (RUN THE BATCH)", type="primary"):
     if not token:
         st.error("🚨 Sếp chưa nhập Bearer Token!")
